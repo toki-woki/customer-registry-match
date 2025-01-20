@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 var sc = new ServiceCollection();
 sc.AddCompanyReceivingCapabilityResolver();
 sc.AddHttpClient();
+sc.AddLogging();
 var sp = sc.BuildServiceProvider();
 var nea = sp.GetRequiredService<NeaResolver>();
 
@@ -29,6 +30,7 @@ foreach (var customer in csvCustomerRegistry)
 // processes and stores file in specified dir with structure
 // CustomerNumber;Identifier;customerName;Operator;DocumentType;FoundIdentifier");
 var matches = new ConcurrentBag<CustomerCapability>();
+var counter = 0;
 await Parallel.ForEachAsync(
     customers,
     new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
@@ -39,6 +41,8 @@ await Parallel.ForEachAsync(
         {
             matches.Add(res);
         }
+        Interlocked.Increment(ref counter);
+        Console.Write($"\rProcessed: {counter} of {customers.Count} customers.");
     });
 
 //set output path for result
